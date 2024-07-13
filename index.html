@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Litecoin Address Total Received</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background-color: #1e1e1e;
+            color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            max-width: 600px;
+            width: 90%;
+            margin: 0 auto;
+            padding: 20px;
+            border-radius: 10px;
+            background: #2b2b2b;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            display: block;
+            margin: 0 auto;
+            border: 2px solid #e0e0e0;
+        }
+        .username {
+            font-size: 26px;
+            font-weight: bold;
+            margin-top: 10px;
+            color: #bb86fc;
+        }
+        .stats {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+        }
+        .stat {
+            flex: 1 1 100px;
+            margin: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            background: #383838;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .stat img {
+            width: 48px;
+            height: 48px;
+        }
+        .stat span {
+            margin-top: 10px;
+            font-size: 18px;
+        }
+        .highlight {
+            color: #03dac6;
+        }
+        .qr-code {
+            margin-top: 20px;
+            padding: 10px;            border: 2px solid #bb86fc;
+            border-radius: 10px;
+            display: inline-block;
+        }
+        .qr-code img {
+            width: 150px;
+            height: 150px;
+        }
+        .timestamp {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #e0e0e0;
+        }
+        .btn {
+            background-color: #bb86fc;
+            color: #1e1e1e;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .btn:hover {
+            background-color: #a070e8;
+        }
+        .snackbar {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 2px;
+            padding: 16px;
+            position: fixed;
+            z-index: 1;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+        }
+        .snackbar.show {
+            visibility: visible;
+            animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        }
+        @keyframes fadein {
+            from {bottom: 0; opacity: 0;}
+            to {bottom: 30px; opacity: 1;}
+        }
+        @keyframes fadeout {
+            from {bottom: 30px; opacity: 1;}
+            to {bottom: 0; opacity: 0;}
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Total Litecoin Received for <span id="page-title"></span></h1>
+        <img id="avatar" src="" alt="Avatar" class="avatar">
+        <div class="username" id="username">Loading...</div>
+        <div class="stats">
+            <div class="stat">
+                <img src="https://img.icons8.com/fluency/48/000000/money.png" alt="Total">
+                <span id="total-received">Loading...</span>
+            </div>
+            <div class="stat">
+                <img src="https://img.icons8.com/fluency/48/000000/group.png" alt="Slaves">
+                <span id="unique-slaves">Loading...</span>
+            </div>
+            <div class="stat">
+                <img src="https://img.icons8.com/fluency/48/000000/medal.png" alt="Largest Send">
+                <span id="largest-send">Loading...</span>
+                <span id="largest-sender" class="highlight"></span>
+            </div>
+        </div>
+        <div class="qr-code">
+            <img id="qr-code-img" src="" alt="Litecoin QR Code" />
+            <p>Scan to send Litecoin</p>
+        </div>
+        <div class="timestamp" id="timestamp">Last updated: Never</div>
+        <button class="btn" onclick="copyLink()">Share</button>
+    </div>
+    <div id="snackbar">Link copied to clipboard</div>
+
+    <script>
+        // Function to get URL parameters
+        function getParameterByName(name, url = window.location.href) {
+            name = name.replace(/[\[\]]/g, '\\$&');
+            const regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+                results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, ' '));
+        }
+
+        const username = getParameterByName('username') || "FindomGodAthena";
+        const ltcAddress = getParameterByName('ltcAddress') || "ltc1qjwqftflzxv7pjy2e6ywp9vpx0r07nf6skuh9kt";
+        const avatarUrl = getParameterByName('avatarUrl') || "https://pbs.twimg.com/profile_images/1798556391327838208/yHJF8w1U_400x400.jpg";
+
+        document.getElementById('username').textContent = username;
+        document.getElementById('page-title').textContent = username;
+        document.title = `Litecoin Address Total Received for ${username}`;
+        document.getElementById('avatar').src = avatarUrl;
+        document.getElementById('qr-code-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${ltcAddress}`;
+
+        // BlockCypher API URL for Litecoin address
+        const apiUrl = `https://api.blockcypher.com/v1/ltc/main/addrs/${ltcAddress}/full`;
+
+        // CoinGecko API URL for Litecoin price in USD
+        const priceApiUrl = `https://api.coingecko.com/api/v3/simple/price?ids=litecoin&vs_currencies=usd`;
+
+        // Function to update data with API values
+        function updateData() {
+            fetch(priceApiUrl)
+                .then(response => {
+                    if (response.status === 429) {
+                        alert('Rate limit exceeded. Please try again later.');
+                        throw new Error('Rate limited');
+                    }
+                    return response.json();
+                })
+                .then(priceData => {
+                    const ltcPrice = priceData.litecoin.usd;
+
+                    fetch(apiUrl)
+                        .then(response => response.json())
+                        .then(data => {
+                            let totalReceived = 0;
+                            let uniqueSlaves = new Set();
+                            let largestSend = 0;
+                            let largestSender = "";
+
+                            data.txs.forEach(tx => {
+                                tx.outputs.forEach(output => {
+                                    if (output.addresses && output.addresses.includes(ltcAddress)) {
+                                        totalReceived += output.value;
+                                        tx.inputs.forEach(input => {
+                                            if (input.addresses && input.addresses.length > 0) {
+                                                uniqueSlaves.add(input.addresses[0]);
+                                                if (output.value > largestSend) {
+                                                    largestSend = output.value;
+                                                    largestSender = input.addresses[0];
+                                                }
+                                            }
+                                        });
+                                    }
+                                });
+                            });
+
+                            // Convert from satoshis to Litecoin and then to USD
+                            totalReceived = (totalReceived / 100000000) * ltcPrice;
+                            largestSend = (largestSend / 100000000) * ltcPrice;
+
+                            // Display the results
+                            document.getElementById('total-received').textContent = `${totalReceived.toFixed(2)} USD`;
+                            document.getElementById('unique-slaves').textContent = `${uniqueSlaves.size}`;
+                            document.getElementById('largest-send').textContent = `${largestSend.toFixed(2)} USD`;
+                            document.getElementById('largest-sender').textContent = `${largestSender}`;
+
+                            // Update timestamp
+                            const now = new Date();
+                            const timestamp = now.toLocaleString();
+                            document.getElementById('timestamp').textContent = `Last updated: ${timestamp}`;
+                        })
+                        .catch(error => {
+                            console.error('Error fetching transaction data:', error);
+                            document.getElementById('total-received').textContent = "Error loading data.";
+                            document.getElementById('unique-slaves').textContent = "Error loading data.";
+                            document.getElementById('largest-send').textContent = "Error loading data.";
+                        });
+                })
+                .catch(error => {
+                    console.error('Error fetching Litecoin price:', error);
+                    document.getElementById('total-received').textContent = "Error loading data.";
+                    document.getElementById('unique-slaves').textContent = "Error loading data.";
+                    document.getElementById('largest-send').textContent = "Error loading data.";
+                });
+        }
+
+        // Function to copy the current URL to the clipboard
+        function copyLink() {
+            const link = window.location.href;
+            const el = document.createElement('textarea');
+            el.value = link;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            
+            // Show snackbar
+            const snackbar = document.getElementById('snackbar');
+            snackbar.className = "snackbar show";
+            setTimeout(() => { snackbar.className = snackbar.className.replace("show", ""); }, 3000);
+        }
+
+        // Initial data fetch
+        updateData();
+
+        // Update data every 30 seconds
+        setInterval(updateData, 30000);
+    </script>
+</body>
+</html>
