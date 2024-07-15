@@ -1,0 +1,9 @@
+[build]
+  functions = "functions"
+
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = [
+    "module-one",
+    "module-two"
+  ]
