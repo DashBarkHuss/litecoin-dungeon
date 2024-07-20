@@ -1,3 +1,4 @@
+<!-- pay.html -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -200,19 +201,24 @@
       document.getElementById("page-title").textContent = username;
       document.title = `Litecoin Address Total Received for ${username}`;
       document.getElementById("avatar").src = avatarUrl;
-      document.getElementById(
-        "qr-code-img"
-      ).src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${ltcAddress}`;
+      // Fetch QR code
+      fetch(`/.netlify/functions/fetch-qr-code?ltcAddress=${ltcAddress}`)
+        .then((response) => response.json())
+        .then((data) => {
+          document.getElementById("qr-code-img").src = data.qrCodeUrl;
+        });
+      // document.getElementById(
+      //   "qr-code-img"
+      // ).src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${ltcAddress}`;
 
-      // BlockCypher API URL for Litecoin address
-      const apiUrl = `https://api.blockcypher.com/v1/ltc/main/addrs/${ltcAddress}/full`;
+      // // BlockCypher API URL for Litecoin address
+      // const apiUrl = `https://api.blockcypher.com/v1/ltc/main/addrs/${ltcAddress}/full`;
 
-      // CoinGecko API URL for Litecoin price in USD
-      const priceApiUrl = `https://api.coingecko.com/api/v3/simple/price?ids=litecoin&vs_currencies=usd`;
-
+      // // CoinGecko API URL for Litecoin price in USD
+      // const priceApiUrl = `https://api.coingecko.com/api/v3/simple/price?ids=litecoin&vs_currencies=usd`;
       // Function to update data with API values
       function updateData() {
-        fetch(priceApiUrl)
+        fetch(`/.netlify/functions/fetch-ltc-price`)
           .then((response) => {
             if (response.status === 429) {
               alert("Rate limit exceeded. Please try again later.");
@@ -223,7 +229,9 @@
           .then((priceData) => {
             const ltcPrice = priceData.litecoin.usd;
 
-            fetch(apiUrl)
+            fetch(
+              `/.netlify/functions/fetch-transaction-data?ltcAddress=${ltcAddress}`
+            )
               .then((response) => response.json())
               .then((data) => {
                 let totalReceived = 0;
@@ -296,6 +304,93 @@
               "Error loading data.";
           });
       }
+
+      // Function to update data with API values
+      // function updateData() {
+      //   fetch(priceApiUrl)
+      //     .then((response) => {
+      //       if (response.status === 429) {
+      //         alert("Rate limit exceeded. Please try again later.");
+      //         throw new Error("Rate limited");
+      //       }
+      //       return response.json();
+      //     })
+      //     .then((priceData) => {
+      //       const ltcPrice = priceData.litecoin.usd;
+
+      //       fetch(apiUrl)
+      //         .then((response) => response.json())
+      //         .then((data) => {
+      //           let totalReceived = 0;
+      //           let uniqueSlaves = new Set();
+      //           let largestSend = 0;
+      //           let largestSender = "";
+
+      //           data.txs.forEach((tx) => {
+      //             tx.outputs.forEach((output) => {
+      //               if (
+      //                 output.addresses &&
+      //                 output.addresses.includes(ltcAddress)
+      //               ) {
+      //                 totalReceived += output.value;
+      //                 tx.inputs.forEach((input) => {
+      //                   if (input.addresses && input.addresses.length > 0) {
+      //                     uniqueSlaves.add(input.addresses[0]);
+      //                     if (output.value > largestSend) {
+      //                       largestSend = output.value;
+      //                       largestSender = input.addresses[0];
+      //                     }
+      //                   }
+      //                 });
+      //               }
+      //             });
+      //           });
+
+      //           // Convert from satoshis to Litecoin and then to USD
+      //           totalReceived = (totalReceived / 100000000) * ltcPrice;
+      //           largestSend = (largestSend / 100000000) * ltcPrice;
+
+      //           // Display the results
+      //           document.getElementById(
+      //             "total-received"
+      //           ).textContent = `${totalReceived.toFixed(2)} USD`;
+      //           document.getElementById(
+      //             "unique-slaves"
+      //           ).textContent = `${uniqueSlaves.size}`;
+      //           document.getElementById(
+      //             "largest-send"
+      //           ).textContent = `${largestSend.toFixed(2)} USD`;
+      //           document.getElementById(
+      //             "largest-sender"
+      //           ).textContent = `${largestSender}`;
+
+      //           // Update timestamp
+      //           const now = new Date();
+      //           const timestamp = now.toLocaleString();
+      //           document.getElementById(
+      //             "timestamp"
+      //           ).textContent = `Last updated: ${timestamp}`;
+      //         })
+      //         .catch((error) => {
+      //           console.error("Error fetching transaction data:", error);
+      //           document.getElementById("total-received").textContent =
+      //             "Error loading data.";
+      //           document.getElementById("unique-slaves").textContent =
+      //             "Error loading data.";
+      //           document.getElementById("largest-send").textContent =
+      //             "Error loading data.";
+      //         });
+      //     })
+      //     .catch((error) => {
+      //       console.error("Error fetching Litecoin price:", error);
+      //       document.getElementById("total-received").textContent =
+      //         "Error loading data.";
+      //       document.getElementById("unique-slaves").textContent =
+      //         "Error loading data.";
+      //       document.getElementById("largest-send").textContent =
+      //         "Error loading data.";
+      //     });
+      // }
 
       // Function to copy the current URL to the clipboard
       function copyLink() {
