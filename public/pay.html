@@ -245,7 +245,27 @@
         });
 
       // Function to update data with API values
+
+      let previousCountReceived;
       function updateData() {
+        // fetch(
+        //   `/.netlify/functions/fetch-transaction-data?ltcAddress=${ltcAddress}`
+        // )
+        //   .then((response) => response.json())
+        //   .then((data) => {
+        //     if (data.error) {
+        //       console.error("Error:", data.error);
+        //     } else {
+        //       console.log("Total Received:", data.total_received);
+        //       console.log("Total Sent:", data.total_sent);
+        //       console.log("Balance:", data.balance);
+        //       console.log("Unique Senders:", data.unique_senders);
+        //       console.log("Largest Send:", data.largest_send);
+        //       // Update your UI with the received data
+        //     }
+        //   })
+        //   .catch((error) => console.error("Error fetching data:", error));
+
         fetch(`/.netlify/functions/fetch-ltc-price`)
           .then((response) => {
             if (response.status === 429) {
@@ -260,85 +280,30 @@
             fetch(
               `/.netlify/functions/fetch-transaction-data?ltcAddress=${ltcAddress}`
             )
-              .then((response) => response.json())
-              .then((data) => {
-                // let totalReceived = 0;
-                // let uniqueSlaves = new Set();
-                // let largestSend = 0;
-                let largestSender = "";
-
-                // data.txs.forEach((tx) => {
-                //   tx.outputs.forEach((output) => {
-                //     if (
-                //       output.addresses &&
-                //       output.addresses.includes(ltcAddress)
-                //     ) {
-                //       totalReceived += output.value;
-                //       tx.inputs.forEach((input) => {
-                //         if (input.addresses && input.addresses.length > 0) {
-                //           uniqueSlaves.add(input.addresses[0]);
-                //           if (output.value > largestSend) {
-                //             largestSend = output.value;
-                //             largestSender = input.addresses[0];
-                //           }
-                //         }
-                //       });
-                //     }
-                //   });
-                // });
-
-                // Initialize counters
-                let receivedTransactions = [];
-
-                // Iterate through each transaction
-                data.txs.forEach((tx) => {
-                  // Check each output in the transaction
-                  tx.outputs.forEach((output) => {
-                    if (output.addresses.includes(ltcAddress)) {
-                      receivedTransactions.push({
-                        fullTx: tx,
-                        output: output,
-                      });
-                    }
-                  });
-                });
-
+              //       .then((response) => response.json())
+              .then(async (response) => {
+                const data = await response.json();
                 // Calculate the total number of transactions
-                const count = receivedTransactions.length;
-
+                const count = data.received_count;
                 // Calculate the total amount received
-                let totalReceived = receivedTransactions.reduce(
-                  (acc, txObj) => acc + txObj.output.value,
-                  0
-                );
-
-                let uniqueSlaves = new Set(
-                  receivedTransactions.flatMap((txObj) =>
-                    txObj.fullTx.inputs.flatMap((input) => input.addresses)
-                  )
-                );
-
+                let totalReceived = data.total_received;
+                let uniqueSlaves = data.unique_senders;
                 // Find the largest send
-                let largestSend = receivedTransactions.reduce(
-                  (max, txObj) => Math.max(max, txObj.output.value),
-                  0
-                );
+                let largestSend = data.largest_send;
 
                 // Convert from satoshis to Litecoin and then to USD
                 totalReceived = (totalReceived / 100000000) * ltcPrice;
                 largestSend = (largestSend / 100000000) * ltcPrice;
-
                 // Display the results
                 document.getElementById(
                   "total-received"
                 ).textContent = `${totalReceived.toFixed(2)} USD`;
                 document.getElementById(
                   "unique-slaves"
-                ).textContent = `${uniqueSlaves.size}`;
+                ).textContent = `${uniqueSlaves}`;
                 document.getElementById(
                   "largest-send"
                 ).textContent = `${largestSend.toFixed(2)} USD`;
-
                 // if previousCountReceived is undefined, set it to the current count
                 if (typeof previousCountReceived === "undefined") {
                   previousCountReceived = count;
@@ -356,8 +321,7 @@
                   });
                 }
                 // Update previous total received
-                previousCountReceived = totalReceived;
-
+                previousCountReceived = count;
                 // Update timestamp
                 const now = new Date();
                 const timestamp = now.toLocaleString();

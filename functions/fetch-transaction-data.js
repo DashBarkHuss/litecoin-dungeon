@@ -1,76 +1,53 @@
 // functions/fetch-transaction-data.js
-import nodeFetch from "node-fetch";
+const BlockcypherApi = require("../blockcypherApi");
+// const AnotherApi = require("../anotherApi");
+
+const apiProvider = process.env.API_PROVIDER || "blockcypher";
+let blockchainApi;
+
+if (apiProvider === "blockcypher") {
+  blockchainApi = new BlockcypherApi("https://api.blockcypher.com");
+} else if (apiProvider === "anotherapi") {
+  console.log("Using Another API");
+  // blockchainApi = new AnotherApi("https://api.anotherapi.com");
+}
 
 exports.handler = async function (event, context) {
   const { ltcAddress } = event.queryStringParameters;
-  const limit = 50; // maximum number of transactions per request
-  let hasMore = true;
-  let before = undefined; // used for pagination
-  let allSenders = new Set();
-  let allTransactions = [];
 
-  while (hasMore) {
-    let apiUrl = `https://api.blockcypher.com/v1/ltc/main/addrs/${ltcAddress}/full?limit=${limit}`;
-    if (before) {
-      apiUrl += `&before=${before}`;
-    }
+  try {
+    const receivedTransactions = await blockchainApi.fetchReceivedTransactions(
+      ltcAddress
+    );
+    const totalReceived = await blockchainApi.getTotalReceived(
+      receivedTransactions,
+      ltcAddress
+    );
+    const uniqueSenders = await blockchainApi.getUniqueSenders(
+      receivedTransactions,
+      ltcAddress
+    );
+    const largestSend = await blockchainApi.getLargestSend(
+      receivedTransactions,
+      ltcAddress
+    );
 
-    const response = await nodeFetch(apiUrl);
-    const data = await response.json();
-
-    // if error, return the error
-    if (data.error) {
-      // log the error
-      console.error("Error fetching transaction data:", data.error);
-      return {
-        statusCode: 404,
-        body: JSON.stringify({
-          message: data.error,
-        }),
-      };
-    }
-    // Store transactions for the final response
-    allTransactions = allTransactions.concat(data.txs);
-
-    // Extract senders from the transactions
-    if (data.txs && data.txs.length > 0) {
-      data.txs.forEach((tx) => {
-        tx.inputs.forEach((input) => {
-          input.addresses.forEach((address) => {
-            allSenders.add(address);
-          });
-        });
-      });
-
-      // Set the 'before' variable to the block height of the last transaction for pagination
-      before = data.txs[data.txs.length - 1].block_height;
-    } else {
-      hasMore = false; // No more transactions to fetch
-    }
-  }
-
-  // if any transactions are undedined, throw an error
-  if (allTransactions.some((tx) => tx === undefined)) {
     return {
-      statusCode: 404,
+      statusCode: 200,
       body: JSON.stringify({
-        message: "Transactions data corrupted. some transactions are undefined",
+        address: ltcAddress,
+        total_received: totalReceived,
+        received_count: receivedTransactions.length,
+        txs: receivedTransactions,
+        unique_senders: uniqueSenders,
+        largest_send: largestSend,
       }),
     };
+  } catch (error) {
+    console.error("Error fetching transaction data:", error);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: error.message }),
+    };
   }
-
-  return {
-    statusCode: 200,
-    body: JSON.stringify({
-      address: ltcAddress,
-      total_received: allTransactions.reduce((acc, tx) => acc + tx.total, 0),
-      total_sent: allTransactions.reduce((acc, tx) => acc + (tx.fees || 0), 0),
-      balance:
-        allTransactions.reduce((acc, tx) => acc + tx.total, 0) -
-        allTransactions.reduce((acc, tx) => acc + (tx.fees || 0), 0),
-      n_tx: allTransactions.length,
-      txs: allTransactions,
-      allSenders: [...allSenders],
-    }),
-  };
 };
