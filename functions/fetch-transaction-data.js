@@ -18,6 +18,17 @@ exports.handler = async function (event, context) {
     const response = await nodeFetch(apiUrl);
     const data = await response.json();
 
+    // if error, return the error
+    if (data.error) {
+      // log the error
+      console.error("Error fetching transaction data:", data.error);
+      return {
+        statusCode: 404,
+        body: JSON.stringify({
+          message: data.error,
+        }),
+      };
+    }
     // Store transactions for the final response
     allTransactions = allTransactions.concat(data.txs);
 
@@ -36,6 +47,16 @@ exports.handler = async function (event, context) {
     } else {
       hasMore = false; // No more transactions to fetch
     }
+  }
+
+  // if any transactions are undedined, throw an error
+  if (allTransactions.some((tx) => tx === undefined)) {
+    return {
+      statusCode: 404,
+      body: JSON.stringify({
+        message: "Transactions data corrupted. some transactions are undefined",
+      }),
+    };
   }
 
   return {

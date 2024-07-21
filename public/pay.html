@@ -141,6 +141,29 @@
           opacity: 0;
         }
       }
+      .address-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 10px;
+      }
+
+      #ltc-address {
+        margin-right: 10px;
+        font-size: 14px;
+        color: #e0e0e0;
+      }
+
+      #copy-icon {
+        cursor: pointer;
+        width: 24px;
+        height: 24px;
+        transition: transform 0.2s ease-in-out;
+      }
+
+      #copy-icon:hover {
+        transform: scale(1.2);
+      }
     </style>
   </head>
   <body>
@@ -174,11 +197,21 @@
       <div class="qr-code">
         <img id="qr-code-img" src="" alt="Litecoin QR Code" />
         <p>Scan to send Litecoin</p>
+        <div class="address-container">
+          <span id="ltc-address"></span>
+          <img
+            id="copy-icon"
+            src="https://img.icons8.com/fluency/24/000000/copy.png"
+            alt="Copy to clipboard"
+            onclick="copyAddress()"
+            title="Copy to clipboard"
+          />
+        </div>
       </div>
       <div class="timestamp" id="timestamp">Last updated: Never</div>
       <button class="btn" onclick="copyLink()">Share</button>
     </div>
-    <div class="snackbar">Link copied to clipboard</div>
+    <div class="snackbar" id="snackbar">Link copied to clipboard</div>
 
     <script>
       // Function to get URL parameters
@@ -207,6 +240,7 @@
       fetch(`/.netlify/functions/fetch-qr-code?ltcAddress=${ltcAddress}`)
         .then((response) => response.json())
         .then((data) => {
+          document.getElementById("ltc-address").textContent = ltcAddress;
           document.getElementById("qr-code-img").src = data.qrCodeUrl;
         });
 
@@ -305,20 +339,24 @@
                   "largest-send"
                 ).textContent = `${largestSend.toFixed(2)} USD`;
 
+                // if previousCountReceived is undefined, set it to the current count
+                if (typeof previousCountReceived === "undefined") {
+                  previousCountReceived = count;
+                }
                 // Check if total received has increased
-                // if (totalReceived > previousCountReceived) {
-                //   // Trigger emoji confetti animation
-                //   emojiBlast({
-                //     emojis: ["😈", "💰"],
-                //     position: {
-                //       x: window.innerWidth / 2,
-                //       y: 0,
-                //     },
-                //     emojiCount: 40,
-                //   });
-                // }
+                if (count > previousCountReceived) {
+                  // Trigger emoji confetti animation
+                  emojiBlast({
+                    emojis: ["😈", "💰", "🖕"],
+                    position: {
+                      x: window.innerWidth / 2,
+                      y: 0,
+                    },
+                    emojiCount: 40,
+                  });
+                }
                 // Update previous total received
-                // previousCountReceived = totalReceived;
+                previousCountReceived = totalReceived;
 
                 // Update timestamp
                 const now = new Date();
@@ -362,6 +400,8 @@
 
         // Show snackbar
         const snackbar = document.getElementById("snackbar");
+        snackbar.textContent = "Link copied to clipboard";
+
         snackbar.className = "snackbar show";
         setTimeout(() => {
           snackbar.className = snackbar.className.replace("show", "");
@@ -370,6 +410,25 @@
 
       // Update data every 30 seconds
       setInterval(updateData, 30000);
+
+      function copyAddress() {
+        const el = document.createElement("textarea");
+        el.value = ltcAddress;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand("copy");
+        document.body.removeChild(el);
+
+        // Show snackbar
+        // Show snackbar
+        const snackbar = document.getElementById("snackbar");
+        // change snack bar text
+        snackbar.textContent = "Address copied to clipboard";
+        snackbar.className = "snackbar show";
+        setTimeout(() => {
+          snackbar.className = snackbar.className.replace("show", "");
+        }, 3000);
+      }
     </script>
   </body>
 </html>
