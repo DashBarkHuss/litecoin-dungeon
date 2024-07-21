@@ -5,6 +5,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Litecoin Address Total Received</title>
+
+    <script src="https://unpkg.com/emoji-blast/dist/global.js"></script>
+
     <script src="config.js"></script>
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap");
@@ -225,30 +228,67 @@
             )
               .then((response) => response.json())
               .then((data) => {
-                let totalReceived = 0;
-                let uniqueSlaves = new Set();
-                let largestSend = 0;
+                // let totalReceived = 0;
+                // let uniqueSlaves = new Set();
+                // let largestSend = 0;
                 let largestSender = "";
 
+                // data.txs.forEach((tx) => {
+                //   tx.outputs.forEach((output) => {
+                //     if (
+                //       output.addresses &&
+                //       output.addresses.includes(ltcAddress)
+                //     ) {
+                //       totalReceived += output.value;
+                //       tx.inputs.forEach((input) => {
+                //         if (input.addresses && input.addresses.length > 0) {
+                //           uniqueSlaves.add(input.addresses[0]);
+                //           if (output.value > largestSend) {
+                //             largestSend = output.value;
+                //             largestSender = input.addresses[0];
+                //           }
+                //         }
+                //       });
+                //     }
+                //   });
+                // });
+
+                // Initialize counters
+                let receivedTransactions = [];
+
+                // Iterate through each transaction
                 data.txs.forEach((tx) => {
+                  // Check each output in the transaction
                   tx.outputs.forEach((output) => {
-                    if (
-                      output.addresses &&
-                      output.addresses.includes(ltcAddress)
-                    ) {
-                      totalReceived += output.value;
-                      tx.inputs.forEach((input) => {
-                        if (input.addresses && input.addresses.length > 0) {
-                          uniqueSlaves.add(input.addresses[0]);
-                          if (output.value > largestSend) {
-                            largestSend = output.value;
-                            largestSender = input.addresses[0];
-                          }
-                        }
+                    if (output.addresses.includes(ltcAddress)) {
+                      receivedTransactions.push({
+                        fullTx: tx,
+                        output: output,
                       });
                     }
                   });
                 });
+
+                // Calculate the total number of transactions
+                const count = receivedTransactions.length;
+
+                // Calculate the total amount received
+                let totalReceived = receivedTransactions.reduce(
+                  (acc, txObj) => acc + txObj.output.value,
+                  0
+                );
+
+                let uniqueSlaves = new Set(
+                  receivedTransactions.flatMap((txObj) =>
+                    txObj.fullTx.inputs.flatMap((input) => input.addresses)
+                  )
+                );
+
+                // Find the largest send
+                let largestSend = receivedTransactions.reduce(
+                  (max, txObj) => Math.max(max, txObj.output.value),
+                  0
+                );
 
                 // Convert from satoshis to Litecoin and then to USD
                 totalReceived = (totalReceived / 100000000) * ltcPrice;
@@ -264,6 +304,21 @@
                 document.getElementById(
                   "largest-send"
                 ).textContent = `${largestSend.toFixed(2)} USD`;
+
+                // Check if total received has increased
+                // if (totalReceived > previousCountReceived) {
+                //   // Trigger emoji confetti animation
+                //   emojiBlast({
+                //     emojis: ["😈", "💰"],
+                //     position: {
+                //       x: window.innerWidth / 2,
+                //       y: 0,
+                //     },
+                //     emojiCount: 40,
+                //   });
+                // }
+                // Update previous total received
+                // previousCountReceived = totalReceived;
 
                 // Update timestamp
                 const now = new Date();

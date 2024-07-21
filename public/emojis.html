@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Emojisplosion Test</title>
+    <script src="https://unpkg.com/emoji-blast/dist/global.js"></script>
+    <script>
+      emojiBlast(); // Just one blast, please.
+      emojiBlasts(); // Commence blasting!
+    </script>
+    <!-- <script async src="https://unpkg.com/emojisplosion/lib/easy.js"></script> -->
+    <style>
+      body {
+        font-family: "Roboto", sans-serif;
+        text-align: center;
+        margin: 0;
+        padding: 0;
+        background-color: #1e1e1e;
+        color: #e0e0e0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+      .container {
+        max-width: 600px;
+        width: 90%;
+        margin: 0 auto;
+        padding: 20px;
+        border-radius: 10px;
+        background: #2b2b2b;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      }
+      .btn {
+        background-color: #bb86fc;
+        color: #1e1e1e;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        margin-top: 20px;
+      }
+      .btn:hover {
+        background-color: #a070e8;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Test Emojisplosions</h1>
+      <button class="btn" onclick="triggerExplosion()">
+        Trigger Emojisplosion
+      </button>
+    </div>
+    <script>
+      function triggerExplosion() {
+        // emojisplosion({
+        //   emojis: ["😈", "💰"],
+        // });
+        emojiBlast({
+          emojis: ["😈", "💰"],
+          position: {
+            x: window.innerWidth / 2,
+            y: 0,
+          },
+          emojiCount: 40,
+        });
+      }
+
+      //   window.onload = function () {
+      //     if (typeof emojisplosion === "function") {
+      //       console.log("emojisplosion is loaded correctly");
+      //     } else {
+      //       console.error("emojisplosion is not defined");
+      //     }
+      //   };
+    </script>
+  </body>
+</html>
